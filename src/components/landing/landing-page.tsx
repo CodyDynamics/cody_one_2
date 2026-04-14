@@ -116,10 +116,15 @@ export function LandingPage() {
             ))}
           </nav>
           <div className="hidden items-center gap-3 md:flex">
-            <Button variant="ghost" className="text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]">
+            <Button
+              variant="ghost"
+              className="cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]"
+            >
               Request demo
             </Button>
-            <Button className="bg-[#6941c6] hover:bg-[#5c36bc]">Get Started</Button>
+            <Button className="cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]">
+              Get Started
+            </Button>
           </div>
         </div>
       </header>
@@ -162,7 +167,7 @@ export function LandingPage() {
             <Button
               size="lg"
               variant="outline"
-              className="h-14 rounded-[16px] border-[#32374399] bg-transparent px-7 text-[18px] font-medium text-[#f3f4f6] hover:bg-white/5"
+              className="h-14 cursor-pointer rounded-[16px] border-[#32374399] bg-transparent px-7 text-[18px] font-medium text-[#f3f4f6] hover:border-[#4a5161] hover:bg-white/5 hover:text-[#f3f4f6]"
             >
               Request Demo
             </Button>
