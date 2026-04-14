@@ -173,9 +173,13 @@ export function LandingPage() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-[560px] rounded-[40px] border border-[#32374380] bg-linear-to-br from-[#171a1f] to-[#262a33] p-3 shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
+          className="relative w-full max-w-[560px] rounded-[40px]  p-3 shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
         >
-          <div className="rounded-[34px] border border-[#32374399] bg-[#171a1f66] p-4 backdrop-blur-xl md:p-5">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0 rotate-[3deg] rounded-[40px] border border-[#32374366] bg-[#12151b] opacity-80"
+          />
+          <div className="relative z-10 rounded-[34px] border border-[#32374399] bg-[#171a1f66] p-4 backdrop-blur-xl md:p-5">
             <div className="mb-3 flex items-start justify-between border-b border-[#32374366] pb-4">
               <div className="flex items-start gap-3">
                 <div className="grid size-10 place-items-center rounded-full bg-[#6941c633]">
