@@ -81,7 +81,7 @@ export function LandingPage() {
       title: "Revenue Overview Dashboard",
     },
     {
-      src: "/images/image_2.jpeg",
+      src: "/images/Image_2.jpeg",
       title: "Denial Trend Insights",
     },
     {
