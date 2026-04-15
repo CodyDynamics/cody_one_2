@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Auth BFF & Vercel
+
+- Copy `frontend/.env.example` to `.env.local` (local) or configure on Vercel: **`API_URL`** (Render backend URL; Route Handler only), **`JWT_EXPIRES_IN`** (match the backend).
+- Sign-in: browser → `POST /api/auth/login` (same-origin) → server calls Nest → sets **`access_token`** (`httpOnly`, `sameSite=lax`, `secure` in production). The JSON response does **not** include the JWT.
+- Session: `GET /api/auth/me` reads the cookie on the server and proxies to Nest. Monorepo details: `../README.md`.

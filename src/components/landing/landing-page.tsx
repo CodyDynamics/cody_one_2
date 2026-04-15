@@ -1,27 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import Image from "next/image";
+import Link from "next/link";
 import {
   Activity,
   Building2,
-  ChartColumn,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
-  Code2,
-  X,
-  FileText,
   HeartPulse,
   Network,
   ShieldCheck,
   Stethoscope,
-  TriangleAlert,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { CoreAiModuleSection } from "@/components/landing/core-ai-module-section";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const navItems = ["Product", "Solutions", "Pricing", "Resources", "Company"];
 
@@ -30,36 +25,6 @@ const partnerItems = [
   { label: "HealthSystems", icon: HeartPulse },
   { label: "CarePartners", icon: Stethoscope },
   { label: "UnityHealth", icon: Network },
-];
-
-const featureItems = [
-  {
-    title: "Code AI",
-    description: "Automated, accurate medical coding to reduce manual errors.",
-    icon: Code2,
-  },
-  {
-    title: "Prior AUTH AI",
-    description:
-      "Streamline authorizations and reduce delays in patient care.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Denial AI",
-    description: "Predict and prevent denials before claims are submitted.",
-    icon: TriangleAlert,
-  },
-  {
-    title: "Posting AI",
-    description: "Automated payment posting and reconciliation processes.",
-    icon: FileText,
-  },
-  {
-    title: "Analytics AI",
-    description: "Deep insights and custom dashboards for complete revenue visibility.",
-    icon: ChartColumn,
-    featured: true,
-  },
 ];
 
 const fadeUp: Variants = {
@@ -71,32 +36,50 @@ const fadeUp: Variants = {
   }),
 };
 
+type MeResponse =
+  | { id: string; email: string; name?: string | null }
+  | { statusCode?: number };
+
 export function LandingPage() {
-  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [authPhase, setAuthPhase] = useState<"loading" | "guest" | "authed">(
+    "loading",
+  );
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  const analyticsSlides = [
-    {
-      src: "/images/image_1.jpeg",
-      title: "Revenue Overview Dashboard",
-    },
-    {
-      src: "/images/image_2.jpeg",
-      title: "Denial Trend Insights",
-    },
-    {
-      src: "/images/image_3.jpeg",
-      title: "Payer Performance Analysis",
-    },
-    {
-      src: "/images/image_4.jpeg",
-      title: "Collections Forecast View",
-    },
-  ];
-
-  const goPrev = () =>
-    setActiveSlide((prev) => (prev - 1 + analyticsSlides.length) % analyticsSlides.length);
-  const goNext = () => setActiveSlide((prev) => (prev + 1) % analyticsSlides.length);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setAuthPhase("guest");
+          setUserEmail(null);
+          return;
+        }
+        const data = (await res.json()) as MeResponse;
+        if ("email" in data && typeof data.email === "string") {
+          setAuthPhase("authed");
+          setUserEmail(data.email);
+        } else {
+          setAuthPhase("guest");
+          setUserEmail(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setAuthPhase("guest");
+          setUserEmail(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="bg-[#050507] text-[#f3f4f6]">
@@ -115,14 +98,65 @@ export function LandingPage() {
               </a>
             ))}
           </nav>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            {authPhase === "authed" && userEmail ? (
+              <>
+                <span
+                  className="hidden max-w-[200px] truncate text-sm text-[#bdc1ca] sm:inline"
+                  title={userEmail}
+                >
+                  {userEmail}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-[#323743] bg-black text-xs text-[#f3f4f6] hover:bg-black/80"
+                  onClick={async () => {
+                    await fetch("/api/auth/logout", {
+                      method: "POST",
+                      credentials: "same-origin",
+                    });
+                    setAuthPhase("guest");
+                    setUserEmail(null);
+                  }}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]",
+                  )}
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/register"
+                  className={cn(
+                    buttonVariants({ size: "sm" }),
+                    "cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]",
+                  )}
+                >
+                  Register
+                </Link>
+              </>
+            )}
             <Button
               variant="ghost"
-              className="cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]"
+              size="sm"
+              className="hidden cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9] md:inline-flex"
             >
               Request demo
             </Button>
-            <Button className="cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]">
+            <Button
+              size="sm"
+              className="cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]"
+            >
               Get Started
             </Button>
           </div>
@@ -249,52 +283,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1248px] px-4 py-20 md:px-8">
-        <h2 className="text-center text-[36px] leading-[40px] font-bold">Core AI Modules</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-[18px] leading-[28px] text-[#bdc1ca]">
-          An integrated suite of AI-driven applications designed to automate and
-          optimize every stage of your revenue cycle.
-        </p>
-        <div className="mt-12 grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-          {featureItems.map((feature, index) => (
-            <motion.article
-              key={feature.title}
-              custom={index}
-              initial="hidden"
-              whileInView="show"
-              whileHover={{ y: -6, scale: 1.015 }}
-              viewport={{ once: true, amount: 0.25 }}
-              variants={fadeUp}
-              className={`rounded-3xl border p-6 ${feature.featured
-                  ? "border-[#6941c666] bg-[#1f113b4d] shadow-[0_0_0_1px_rgba(105,65,198,0.25)]"
-                  : "border-[#32374380] bg-[#171a1f66]"
-                } cursor-pointer transition-all duration-300 hover:border-[#6941c64d] hover:bg-[#1a1d244d]`}
-              onClick={() => {
-                if (feature.featured) {
-                  setIsAnalyticsModalOpen(true);
-                }
-              }}
-            >
-              <div
-                className={`mb-6 flex size-14 items-center justify-center rounded-2xl ${feature.featured ? "bg-[#6941c633]" : "bg-[#262a3380]"
-                  }`}
-              >
-                <feature.icon className="size-6 text-[#bca9ef]" aria-hidden />
-              </div>
-              <h3 className="text-xl font-semibold">{feature.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-[#bdc1ca]">{feature.description}</p>
-              {feature.featured && (
-                <button
-                  type="button"
-                  className="mt-5 text-sm font-medium text-[#6941c6] transition-colors hover:text-[#8f70da]"
-                >
-                  Explore Insights
-                </button>
-              )}
-            </motion.article>
-          ))}
-        </div>
-      </section>
+      <CoreAiModuleSection />
 
       <section className="border-y border-[#32374380] bg-[#1f113b33]">
         <div className="mx-auto flex w-full max-w-[1248px] flex-col gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-8">
@@ -328,7 +317,16 @@ export function LandingPage() {
             </div>
             <div className="grid grid-cols-2 gap-8 text-sm md:grid-cols-4">
               {[
-                ["Code AI", "Prior AUTH AI", "Denial AI", "Posting AI", "Analytics AI"],
+                [
+                  "Patient Access AI",
+                  "Eligibility AI",
+                  "Prior Authorization AI",
+                  "Coding AI",
+                  "Claims AI",
+                  "Denial AI",
+                  "Collections AI",
+                  "Analytics AI",
+                ],
                 ["Hospitals", "Private Practices", "Billing Companies", "Specialty Clinics"],
                 ["Documentation", "Case Studies", "Blog", "API Reference"],
                 ["About Us", "Careers", "Contact", "Partners"],
@@ -351,124 +349,6 @@ export function LandingPage() {
         </div>
       </footer>
 
-      <AnimatePresence>
-        {isAnalyticsModalOpen && (
-          <div
-            className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Analytics AI carousel"
-            onClick={() => setIsAnalyticsModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 28, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.97 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[#323743] bg-[#1e2128] shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="border-b border-[#32374366] px-6 py-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-4xl font-bold tracking-[-0.02em]">Analytics AI</h3>
-                    <p className="mt-2 text-sm text-[#bdc1ca]">
-                      Deep insights and customizable dashboards for complete revenue cycle visibility.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="Close analytics modal"
-                    className="rounded-md p-2 text-[#bdc1ca] hover:bg-black/20 hover:text-white"
-                    onClick={() => setIsAnalyticsModalOpen(false)}
-                  >
-                    <X className="size-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-b border-[#32374366] p-6">
-                <div className="relative overflow-hidden rounded-xl border border-[#32374380]">
-                  <Image
-                    src={analyticsSlides[activeSlide].src}
-                    alt={analyticsSlides[activeSlide].title}
-                    width={1200}
-                    height={640}
-                    className="h-[340px] w-full object-cover md:h-[420px]"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/50 to-transparent p-5">
-                    <span className="inline-flex rounded-md bg-black/45 px-3 py-1 text-sm">
-                      {analyticsSlides[activeSlide].title}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={goPrev}
-                    className="rounded-md border border-[#323743] bg-black px-3 py-2 text-sm hover:bg-black/70"
-                  >
-                    <ChevronLeft className="size-4" />
-                  </button>
-                  <div className="flex items-center gap-2">
-                    {analyticsSlides.map((slide, idx) => (
-                      <button
-                        key={slide.src}
-                        type="button"
-                        aria-label={`Go to slide ${idx + 1}`}
-                        onClick={() => setActiveSlide(idx)}
-                        className={`h-2.5 rounded-full transition-all ${activeSlide === idx ? "w-6 bg-[#6941c6]" : "w-2.5 bg-white/50"
-                          }`}
-                      />
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={goNext}
-                    className="rounded-md border border-[#323743] bg-black px-3 py-2 text-sm hover:bg-black/70"
-                  >
-                    <ChevronRight className="size-4" />
-                  </button>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {analyticsSlides.map((slide, idx) => (
-                    <button
-                      type="button"
-                      key={slide.src}
-                      onClick={() => setActiveSlide(idx)}
-                      className={`overflow-hidden rounded-md border ${activeSlide === idx
-                          ? "border-[#6941c6] shadow-[0_0_0_1px_rgba(105,65,198,0.4)]"
-                          : "border-transparent opacity-70 hover:opacity-100"
-                        }`}
-                    >
-                      <Image
-                        src={slide.src}
-                        alt={`${slide.title} thumbnail`}
-                        width={280}
-                        height={140}
-                        className="h-[88px] w-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 px-6 py-5">
-                <Button
-                  variant="outline"
-                  className="border-[#323743] bg-black text-[#f3f4f6]"
-                  onClick={() => setIsAnalyticsModalOpen(false)}
-                >
-                  Close
-                </Button>
-                <Button className="bg-[#6941c6] hover:bg-[#5c36bc]">Request Demo</Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }
