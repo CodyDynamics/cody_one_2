@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import Image from "next/image";
@@ -26,6 +26,43 @@ type CoreAiModuleSectionProps = {
   onRequestLogin: () => void;
 };
 
+type PixelBlock = {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+};
+
+function createSeededRandom(seed: number) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+}
+
+function createPixelBlocks(total: number): PixelBlock[] {
+  const rand = createSeededRandom(20260415);
+  return Array.from({ length: total }, (_, id) => {
+    const w = 6 + Math.floor(rand() * 18);
+    const h = 6 + Math.floor(rand() * 18);
+    return {
+      id,
+      x: Math.floor(rand() * 100),
+      y: Math.floor(rand() * 100),
+      w,
+      h,
+      delay: rand() * 0.85,
+      duration: 1.05 + rand() * 1.15,
+      rotate: Math.floor(rand() * 22) - 11,
+    };
+  });
+}
+
 export function CoreAiModuleSection({
   isAuthenticated,
   isCheckingAuth,
@@ -34,7 +71,9 @@ export function CoreAiModuleSection({
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [showUnlockGlow, setShowUnlockGlow] = useState(false);
+  const [showPixelReveal, setShowPixelReveal] = useState(false);
   const prevAuthRef = useRef(isAuthenticated);
+  const pixelBlocks = useMemo(() => createPixelBlocks(140), []);
 
   const analyticsSlides = [
     { src: "/images/image_1.jpeg", title: "Revenue Overview Dashboard" },
@@ -53,9 +92,16 @@ export function CoreAiModuleSection({
   useEffect(() => {
     if (!prevAuthRef.current && isAuthenticated) {
       setShowUnlockGlow(true);
-      const timer = window.setTimeout(() => setShowUnlockGlow(false), 900);
+      setShowPixelReveal(true);
+
+      const glowTimer = window.setTimeout(() => setShowUnlockGlow(false), 1300);
+      const pixelTimer = window.setTimeout(() => setShowPixelReveal(false), 2300);
+
       prevAuthRef.current = isAuthenticated;
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(glowTimer);
+        window.clearTimeout(pixelTimer);
+      };
     }
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated]);
@@ -86,7 +132,7 @@ export function CoreAiModuleSection({
                 }
           }
           transition={{
-            duration: isAuthenticated ? 0.75 : 0.45,
+            duration: isAuthenticated ? 1.15 : 0.62,
             ease: isAuthenticated ? [0.22, 1, 0.36, 1] : [0.4, 0, 0.2, 1],
           }}
           className={cn(
@@ -170,14 +216,14 @@ export function CoreAiModuleSection({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              transition={{ duration: 0.52, ease: "easeOut" }}
               className="absolute inset-0 grid place-items-center rounded-2xl bg-black/25"
             >
               <motion.div
                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                 className="rounded-xl border border-[#323743] bg-[#11131a]/95 px-6 py-5 text-center shadow-xl"
               >
                 <p className="text-sm text-[#bdc1ca]">
@@ -194,6 +240,53 @@ export function CoreAiModuleSection({
                   Open login
                 </Button>
               </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+        <AnimatePresence>
+          {isAuthenticated || showPixelReveal ? (
+            <motion.div
+              initial={false}
+              animate={{ opacity: isAuthenticated && !showPixelReveal ? 0 : 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55, ease: "easeOut" }}
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+            >
+              {pixelBlocks.map((block) => (
+                <motion.span
+                  key={block.id}
+                  initial={false}
+                  animate={
+                    isAuthenticated && showPixelReveal
+                      ? {
+                          opacity: 0,
+                          scale: 0.15,
+                          y: -6,
+                          x: 6,
+                          rotate: block.rotate,
+                        }
+                      : {
+                          opacity: 0.42,
+                          scale: 1,
+                          y: 0,
+                          x: 0,
+                          rotate: 0,
+                        }
+                  }
+                  transition={{
+                    delay: block.delay,
+                    duration: block.duration,
+                    ease: [0.2, 1, 0.25, 1],
+                  }}
+                  className="absolute rounded-[2px] border border-white/8 bg-[#0b0f15]/90 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]"
+                  style={{
+                    left: `${block.x}%`,
+                    top: `${block.y}%`,
+                    width: `${block.w}px`,
+                    height: `${block.h}px`,
+                  }}
+                />
+              ))}
             </motion.div>
           ) : null}
         </AnimatePresence>
