@@ -3,8 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  TrendingUp,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +43,83 @@ type PixelBlock = {
   duration: number;
   rotate: number;
 };
+
+type AnalyticsSlide = {
+  id: string;
+  image: string;
+  imageAlt: string;
+  rightTitle: string;
+  rightDescription: string;
+  stats: Array<{
+    label: string;
+    value: string;
+    icon: "trend" | "activity" | "clock";
+  }>;
+  integrationNote: string;
+};
+
+const analyticsSlides: AnalyticsSlide[] = [
+  {
+    id: "overview",
+    image: "https://www.figma.com/api/mcp/asset/f376136b-4f37-49f2-8f79-7a0347a7f966",
+    imageAlt: "Analytics dashboard overview",
+    rightTitle: "Key Performance Impact",
+    rightDescription:
+      "Our Analytics AI continuously monitors your revenue cycle, identifying bottlenecks and predicting outcomes to optimize financial health.",
+    stats: [
+      { label: "Denial Rate Reduction", value: "15%", icon: "trend" },
+      { label: "Net Collection Increase", value: "12%", icon: "activity" },
+      { label: "Days in A/R Reduced", value: "8 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Integrates seamlessly with Epic, Cerner, and 40+ other major EHR/PM systems out of the box.",
+  },
+  {
+    id: "denial",
+    image: "https://www.figma.com/api/mcp/asset/7dedaced-aff3-45c4-903a-eb2c82514572",
+    imageAlt: "Denial trend insights",
+    rightTitle: "Denial Intelligence",
+    rightDescription:
+      "Track denial categories in real time and identify root causes early, so teams can intervene before claims are rejected.",
+    stats: [
+      { label: "Preventable Denials", value: "31%", icon: "trend" },
+      { label: "First-pass Claims", value: "96.4%", icon: "activity" },
+      { label: "Appeal Cycle Time", value: "-2.1 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Customizes insights per payer policy and claim type with continuously updated benchmarks.",
+  },
+  {
+    id: "payer",
+    image: "https://www.figma.com/api/mcp/asset/430ec2ff-3368-4e8d-8ae8-ed56aed23824",
+    imageAlt: "Payer performance analysis dashboard",
+    rightTitle: "Payer Performance Lens",
+    rightDescription:
+      "Compare payer behavior side by side to highlight lagging authorization windows and reimbursement inconsistencies.",
+    stats: [
+      { label: "Payer SLA Adherence", value: "89%", icon: "trend" },
+      { label: "Recovery Opportunity", value: "$1.2M", icon: "activity" },
+      { label: "Avg. Settlement Delay", value: "4.8 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Built to support multi-site systems with normalized metrics across payer contracts.",
+  },
+  {
+    id: "forecast",
+    image: "https://www.figma.com/api/mcp/asset/f7a678ff-8f5f-41d2-b807-4aea69e009c9",
+    imageAlt: "Collections forecast dashboard",
+    rightTitle: "Collections Forecast",
+    rightDescription:
+      "Forecast cash flow with confidence using trend-driven projections and scenario planning across service lines.",
+    stats: [
+      { label: "Projected Cash-in", value: "+18%", icon: "trend" },
+      { label: "At-risk Accounts", value: "742", icon: "activity" },
+      { label: "Time to Resolution", value: "6.2 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Connects financial, denial, and operational data to produce a single forecast model.",
+  },
+];
 
 function createSeededRandom(seed: number) {
   let state = seed >>> 0;
@@ -74,20 +158,15 @@ export function CoreAiModuleSection({
   const [showPixelReveal, setShowPixelReveal] = useState(false);
   const prevAuthRef = useRef(isAuthenticated);
   const pixelBlocks = useMemo(() => createPixelBlocks(140), []);
+  const currentSlide = analyticsSlides[activeSlide];
 
-  const analyticsSlides = [
-    { src: "/images/image_1.jpeg", title: "Revenue Overview Dashboard" },
-    { src: "/images/image_2.jpeg", title: "Denial Trend Insights" },
-    { src: "/images/image_3.jpeg", title: "Payer Performance Analysis" },
-    { src: "/images/image_4.jpeg", title: "Collections Forecast View" },
-  ];
+  function goPrevSlide() {
+    setActiveSlide((prev) => (prev - 1 + analyticsSlides.length) % analyticsSlides.length);
+  }
 
-  const goPrev = () =>
-    setActiveSlide(
-      (prev) => (prev - 1 + analyticsSlides.length) % analyticsSlides.length,
-    );
-  const goNext = () =>
+  function goNextSlide() {
     setActiveSlide((prev) => (prev + 1) % analyticsSlides.length);
+  }
 
   useEffect(() => {
     if (!prevAuthRef.current && isAuthenticated) {
@@ -316,10 +395,10 @@ export function CoreAiModuleSection({
       <AnimatePresence>
         {isAnalyticsModalOpen ? (
           <div
-            className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/75 p-1.5 backdrop-blur-sm sm:p-3 md:p-4"
             role="dialog"
             aria-modal="true"
-            aria-label="Analytics AI carousel"
+            aria-label="Analytics AI details modal"
             onClick={() => setIsAnalyticsModalOpen(false)}
           >
             <motion.div
@@ -327,24 +406,25 @@ export function CoreAiModuleSection({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.97 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[#323743] bg-[#1e2128] shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
+              className="my-2 flex max-h-[90vh] w-full max-w-[94vw] flex-col overflow-hidden rounded-xl border border-[#32374366] bg-[#07090d] shadow-[0_25px_50px_rgba(0,0,0,0.35)] sm:my-4 sm:max-h-[92vh] sm:max-w-[92vw] sm:rounded-2xl lg:max-w-[1100px]"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="border-b border-[#32374366] px-6 py-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-4xl font-bold tracking-[-0.02em]">
+              <div className="border-b border-[#32374366] px-3 py-3 sm:px-6 sm:py-5 lg:px-7 lg:py-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <BarChart3 className="size-4 text-[#7c4dff] sm:size-5" />
+                    <h3 className="text-base font-bold tracking-[-0.02em] text-[#f3f4f6] sm:text-[28px] lg:text-[32px]">
                       Analytics AI
                     </h3>
-                    <p className="mt-2 text-sm text-[#bdc1ca]">
-                      Deep insights and customizable dashboards for complete
-                      revenue cycle visibility.
+                    <span className="text-sm text-[#bdc1ca] sm:text-xl lg:text-[24px]">—</span>
+                    <p className="truncate text-xs text-[#bdc1ca] sm:text-base lg:text-[18px]">
+                      Insights &amp; Dashboards
                     </p>
                   </div>
                   <button
                     type="button"
                     aria-label="Close analytics modal"
-                    className="rounded-md p-2 text-[#bdc1ca] hover:bg-black/20 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
+                    className="rounded-md p-2 text-[#bdc1ca] hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
                     onClick={() => setIsAnalyticsModalOpen(false)}
                   >
                     <X className="size-5" />
@@ -352,89 +432,119 @@ export function CoreAiModuleSection({
                 </div>
               </div>
 
-              <div className="border-b border-[#32374366] p-6">
-                <div className="relative overflow-hidden rounded-xl border border-[#32374380]">
-                  <Image
-                    src={analyticsSlides[activeSlide].src}
-                    alt={analyticsSlides[activeSlide].title}
-                    width={1200}
-                    height={640}
-                    className="h-[340px] w-full object-cover md:h-[420px]"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/50 to-transparent p-5">
-                    <span className="inline-flex rounded-md bg-black/45 px-3 py-1 text-sm">
-                      {analyticsSlides[activeSlide].title}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={goPrev}
-                    aria-label="Previous slide"
-                    className="rounded-md border border-[#323743] bg-black px-3 py-2 text-sm hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
-                  >
-                    <ChevronLeft className="size-4" />
-                  </button>
-                  <div className="flex items-center gap-2">
-                    {analyticsSlides.map((slide, idx) => (
+              <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#32374366] bg-black/40 px-3 py-3 sm:px-6 sm:py-6 lg:px-7 lg:py-7 [scrollbar-width:thin] [scrollbar-color:rgba(124,77,255,0.6)_rgba(255,255,255,0.06)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#7c4dff]/70 [&::-webkit-scrollbar-thumb:hover]:bg-[#8f65ff]/80">
+                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
+                  <div>
+                    <div className="overflow-hidden rounded-[18px] border border-[#32374399] bg-[#171a1f] shadow-[0_1px_2px_rgba(23,26,31,0.08)]">
+                      <AnimatePresence mode="wait">
+                        <motion.img
+                          key={currentSlide.id}
+                          src={currentSlide.image}
+                          alt={currentSlide.imageAlt}
+                          initial={{ opacity: 0.4, scale: 1.02 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0.35, scale: 0.99 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          className="h-auto max-h-[220px] w-full object-cover sm:max-h-[290px] md:max-h-[360px] lg:max-h-none"
+                        />
+                      </AnimatePresence>
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-1.5 sm:mt-4 sm:gap-2">
                       <button
-                        key={slide.src}
                         type="button"
-                        aria-label={`Go to slide ${idx + 1}`}
-                        onClick={() => setActiveSlide(idx)}
-                        className={`h-2.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 ${
-                          activeSlide === idx
-                            ? "w-6 bg-cyan-500"
-                            : "w-2.5 bg-white/50"
-                        }`}
-                      />
-                    ))}
+                        onClick={goPrevSlide}
+                        aria-label="Previous analytics slide"
+                        className="grid size-6 place-items-center rounded-md border border-[#32374399] bg-[#0f1116] text-[#bdc1ca] hover:text-white sm:size-8"
+                      >
+                        <ChevronLeft className="size-3.5 sm:size-4" />
+                      </button>
+                      {analyticsSlides.map((slide, idx) => (
+                        <button
+                          key={slide.id}
+                          type="button"
+                          onClick={() => setActiveSlide(idx)}
+                          aria-label={`Go to analytics slide ${idx + 1}`}
+                          className={cn(
+                            "size-1.5 rounded-full bg-[#262a33] transition-all sm:size-2",
+                            idx === activeSlide && "h-2 w-6 bg-[#6941c6]",
+                          )}
+                        />
+                      ))}
+                      <button
+                        type="button"
+                        onClick={goNextSlide}
+                        aria-label="Next analytics slide"
+                        className="grid size-6 place-items-center rounded-md border border-[#32374399] bg-[#0f1116] text-[#bdc1ca] hover:text-white sm:size-8"
+                      >
+                        <ChevronRight className="size-3.5 sm:size-4" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={goNext}
-                    aria-label="Next slide"
-                    className="rounded-md border border-[#323743] bg-black px-3 py-2 text-sm hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
-                  >
-                    <ChevronRight className="size-4" />
-                  </button>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {analyticsSlides.map((slide, idx) => (
-                    <button
-                      type="button"
-                      key={slide.src}
-                      onClick={() => setActiveSlide(idx)}
-                      className={`overflow-hidden rounded-md border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 ${
-                        activeSlide === idx
-                          ? "border-cyan-500 shadow-[0_0_0_1px_rgba(6,182,212,0.45)]"
-                          : "border-transparent opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <Image
-                        src={slide.src}
-                        alt={`${slide.title} thumbnail`}
-                        width={280}
-                        height={140}
-                        className="h-[88px] w-full object-cover"
-                      />
-                    </button>
-                  ))}
+                  <div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentSlide.id}
+                        initial={{ opacity: 0.35, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0.25, y: -6 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                      >
+                        <h4 className="text-lg font-medium leading-[1.1] text-[#f3f4f6] sm:text-[26px] lg:text-[30px]">
+                          {currentSlide.rightTitle}
+                        </h4>
+                        <p className="mt-2 text-sm leading-relaxed text-[#bdc1ca] sm:mt-3 sm:text-base lg:text-[16px]">
+                          {currentSlide.rightDescription}
+                        </p>
+                        <div className="mt-3 space-y-2.5 sm:mt-5 sm:space-y-4">
+                          {currentSlide.stats.map((stat) => (
+                            <div
+                              key={`${currentSlide.id}-${stat.label}`}
+                              className="rounded-xl border border-[#32374380] bg-[#171a1f] px-3 py-2.5 sm:rounded-2xl sm:px-5 sm:py-4"
+                            >
+                              <div className="flex items-center gap-2.5 sm:gap-4">
+                                {stat.icon === "trend" ? (
+                                  <TrendingUp className="size-4 text-[#f3f4f6] sm:size-5" />
+                                ) : null}
+                                {stat.icon === "activity" ? (
+                                  <span className="grid size-8 place-items-center rounded-full bg-[#6941c61a] sm:size-10">
+                                    <Activity className="size-4 text-[#6941c6] sm:size-5" />
+                                  </span>
+                                ) : null}
+                                {stat.icon === "clock" ? (
+                                  <span className="grid size-8 place-items-center rounded-full bg-[#32d5831a] sm:size-10">
+                                    <Clock3 className="size-4 text-[#32d583] sm:size-5" />
+                                  </span>
+                                ) : null}
+                                <div>
+                                  <p className="text-sm text-[#bdc1ca] sm:text-base lg:text-[14px]">
+                                    {stat.label}
+                                  </p>
+                                  <p className="text-[24px] font-bold leading-none text-[#f3f4f6] sm:text-[30px] lg:text-[44px]">
+                                    {stat.value}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 border-t border-[#32374366] pt-3 text-[11px] leading-5 text-[#9ea3ad] sm:mt-5 sm:pt-5 sm:text-[11px]">
+                          {currentSlide.integrationNote}
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 px-6 py-5">
+              <div className="flex items-center justify-end gap-2 bg-[#171a1f80] px-3 py-3 sm:gap-3 sm:px-6 sm:py-5 lg:px-7 lg:py-6">
                 <Button
-                  variant="outline"
-                  className="border-[#323743] bg-black text-[#f3f4f6] hover:bg-black/80"
+                  variant="ghost"
+                  className="h-8 px-3 text-xs text-[#bdc1ca] hover:bg-white/5 hover:text-[#f3f4f6] sm:h-10 sm:px-4 sm:text-sm"
                   onClick={() => setIsAnalyticsModalOpen(false)}
                 >
                   Close
                 </Button>
-                <Button className="bg-cyan-600 text-white hover:bg-cyan-500">
+                <Button className="h-8 bg-[#6941c6] px-3 text-xs text-white hover:bg-[#5c36bc] sm:h-10 sm:px-4 sm:text-sm">
                   Request Demo
                 </Button>
               </div>
