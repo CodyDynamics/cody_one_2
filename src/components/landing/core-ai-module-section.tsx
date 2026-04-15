@@ -515,7 +515,7 @@ export function CoreAiModuleSection({
               <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#32374366] bg-black/40 px-3 py-3 sm:px-5 sm:py-5 lg:px-6 lg:py-6 [scrollbar-width:thin] [scrollbar-color:rgba(124,77,255,0.6)_rgba(255,255,255,0.06)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#7c4dff]/70 [&::-webkit-scrollbar-thumb:hover]:bg-[#8f65ff]/80">
                 <div className="grid gap-3 sm:gap-4 md:gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,400px)] lg:gap-5">
                   <div className="w-full">
-                    <div className="h-[220px] overflow-hidden rounded-[18px] border border-[#32374399] bg-[#171a1f] shadow-[0_1px_2px_rgba(23,26,31,0.08)] sm:h-[300px] md:h-[360px] lg:h-[400px] xl:h-[440px]">
+                    <div className="h-[220px] overflow-hidden rounded-[18px] border border-[#32374399] bg-[#171a1f] shadow-[0_1px_2px_rgba(23,26,31,0.08)] sm:h-[300px] md:h-[360px] lg:h-[600px] xl:h-[700px]">
                       <AnimatePresence mode="wait">
                         <motion.img
                           key={currentSlide.id}
