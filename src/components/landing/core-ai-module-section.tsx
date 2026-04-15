@@ -61,7 +61,7 @@ type AnalyticsSlide = {
 const analyticsSlides: AnalyticsSlide[] = [
   {
     id: "overview",
-    image: "https://www.figma.com/api/mcp/asset/f376136b-4f37-49f2-8f79-7a0347a7f966",
+    image: "/images/version_2/image1.jpeg",
     imageAlt: "Analytics dashboard overview",
     rightTitle: "Key Performance Impact",
     rightDescription:
@@ -76,7 +76,7 @@ const analyticsSlides: AnalyticsSlide[] = [
   },
   {
     id: "denial",
-    image: "https://www.figma.com/api/mcp/asset/7dedaced-aff3-45c4-903a-eb2c82514572",
+    image: "/images/version_2/image2.png",
     imageAlt: "Denial trend insights",
     rightTitle: "Denial Intelligence",
     rightDescription:
@@ -91,7 +91,7 @@ const analyticsSlides: AnalyticsSlide[] = [
   },
   {
     id: "payer",
-    image: "https://www.figma.com/api/mcp/asset/430ec2ff-3368-4e8d-8ae8-ed56aed23824",
+    image: "/images/version_2/image3.jpeg",
     imageAlt: "Payer performance analysis dashboard",
     rightTitle: "Payer Performance Lens",
     rightDescription:
@@ -106,7 +106,7 @@ const analyticsSlides: AnalyticsSlide[] = [
   },
   {
     id: "forecast",
-    image: "https://www.figma.com/api/mcp/asset/f7a678ff-8f5f-41d2-b807-4aea69e009c9",
+    image: "/images/version_2/image4.png",
     imageAlt: "Collections forecast dashboard",
     rightTitle: "Collections Forecast",
     rightDescription:
@@ -118,6 +118,81 @@ const analyticsSlides: AnalyticsSlide[] = [
     ],
     integrationNote:
       "Connects financial, denial, and operational data to produce a single forecast model.",
+  },
+  {
+    id: "authorization",
+    image: "/images/version_2/image5.png",
+    imageAlt: "Authorization operations dashboard",
+    rightTitle: "Authorization Control Tower",
+    rightDescription:
+      "Coordinate prior-auth requests across departments with a single timeline that highlights approval bottlenecks and escalation risks.",
+    stats: [
+      { label: "Approval Throughput", value: "+22%", icon: "trend" },
+      { label: "Pending Requests", value: "184", icon: "activity" },
+      { label: "Avg. Approval Time", value: "1.7 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Aligns payer rules with clinician workflow to reduce delays before treatment is scheduled.",
+  },
+  {
+    id: "coding-accuracy",
+    image: "/images/version_2/image6.png",
+    imageAlt: "Coding quality and compliance dashboard",
+    rightTitle: "Coding Quality Monitor",
+    rightDescription:
+      "Surface coding drift early with AI-assisted anomaly detection and benchmark every team against compliance and reimbursement targets.",
+    stats: [
+      { label: "Coding Accuracy", value: "98.6%", icon: "trend" },
+      { label: "High-risk Charts", value: "63", icon: "activity" },
+      { label: "Review Cycle Time", value: "5.4 hrs", icon: "clock" },
+    ],
+    integrationNote:
+      "Supports coding governance programs with audit-ready insights and explainable AI recommendations.",
+  },
+  {
+    id: "patient-finance",
+    image: "/images/version_2/image7.jpeg",
+    imageAlt: "Patient financial experience dashboard",
+    rightTitle: "Patient Financial Journey",
+    rightDescription:
+      "Track patient billing touchpoints end-to-end to improve transparency, reduce confusion, and increase on-time payments.",
+    stats: [
+      { label: "Self-pay Conversion", value: "+14%", icon: "trend" },
+      { label: "Open Statements", value: "1,248", icon: "activity" },
+      { label: "Payment Resolution", value: "3.2 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Combines billing, call-center, and portal signals to improve patient experience and collection outcomes.",
+  },
+  {
+    id: "claim-lifecycle",
+    image: "/images/version_2/image8.jpeg",
+    imageAlt: "Claim lifecycle performance dashboard",
+    rightTitle: "Claim Lifecycle Intelligence",
+    rightDescription:
+      "Visualize every stage from submission to reimbursement, then prioritize intervention where claim leakage is highest.",
+    stats: [
+      { label: "Clean Claim Rate", value: "97.1%", icon: "trend" },
+      { label: "Claims At Risk", value: "409", icon: "activity" },
+      { label: "End-to-end Turnaround", value: "7.9 Days", icon: "clock" },
+    ],
+    integrationNote:
+      "Built for revenue integrity teams that need rapid visibility across fragmented claim workflows.",
+  },
+  {
+    id: "executive-view",
+    image: "/images/version_2/image9.jpeg",
+    imageAlt: "Executive revenue cycle summary dashboard",
+    rightTitle: "Executive Performance Brief",
+    rightDescription:
+      "Deliver a board-ready summary of revenue cycle health with strategic KPIs, trend context, and immediate action priorities.",
+    stats: [
+      { label: "Revenue Efficiency", value: "+11.8%", icon: "trend" },
+      { label: "Priority Initiatives", value: "9", icon: "activity" },
+      { label: "Variance Detection", value: "< 24h", icon: "clock" },
+    ],
+    integrationNote:
+      "Designed for leadership review sessions with concise, high-signal metrics and explainable movement drivers.",
   },
 ];
 
@@ -170,23 +245,32 @@ export function CoreAiModuleSection({
 
   useEffect(() => {
     if (!prevAuthRef.current && isAuthenticated) {
-      setShowUnlockGlow(true);
-      setShowPixelReveal(true);
+      let glowTimer: number | undefined;
+      let pixelTimer: number | undefined;
+      const frame = window.requestAnimationFrame(() => {
+        setShowUnlockGlow(true);
+        setShowPixelReveal(true);
 
-      const glowTimer = window.setTimeout(() => setShowUnlockGlow(false), 1300);
-      const pixelTimer = window.setTimeout(() => setShowPixelReveal(false), 2300);
+        glowTimer = window.setTimeout(() => setShowUnlockGlow(false), 1300);
+        pixelTimer = window.setTimeout(() => setShowPixelReveal(false), 2300);
+      });
 
       prevAuthRef.current = isAuthenticated;
       return () => {
-        window.clearTimeout(glowTimer);
-        window.clearTimeout(pixelTimer);
+        window.cancelAnimationFrame(frame);
+        if (glowTimer !== undefined) {
+          window.clearTimeout(glowTimer);
+        }
+        if (pixelTimer !== undefined) {
+          window.clearTimeout(pixelTimer);
+        }
       };
     }
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated]);
 
   return (
-    <section className="mx-auto w-full max-w-[1248px] px-4 py-20 md:px-8">
+    <section className="mx-auto w-full max-w-[1248px] px-4 py-5 md:px-8">
       <h2 className="text-center text-[36px] leading-[40px] font-bold text-[#f3f4f6]">
         Core AI Modules
       </h2>
@@ -195,20 +279,20 @@ export function CoreAiModuleSection({
         optimize every stage of your revenue cycle.
       </p>
 
-      <div className="relative mt-12">
+      <div className="relative mt-4">
         <motion.div
           animate={
             isAuthenticated
               ? {
-                  filter: "blur(0px) saturate(1)",
-                  opacity: 1,
-                  scale: 1,
-                }
+                filter: "blur(0px) saturate(1)",
+                opacity: 1,
+                scale: 1,
+              }
               : {
-                  filter: "blur(5px) saturate(0.6)",
-                  opacity: 0.42,
-                  scale: 0.988,
-                }
+                filter: "blur(5px) saturate(0.6)",
+                opacity: 0.42,
+                scale: 0.988,
+              }
           }
           transition={{
             duration: isAuthenticated ? 1.15 : 0.62,
@@ -276,7 +360,7 @@ export function CoreAiModuleSection({
               <p className="mt-3 flex-1 text-sm leading-6 text-[#bdc1ca]">
                 {feature.description}
               </p>
-              <span
+              {/* <span
                 className={cn(
                   "mt-5 inline-flex rounded-full px-3 py-1.5 text-xs font-medium",
                   feature.featured
@@ -285,7 +369,7 @@ export function CoreAiModuleSection({
                 )}
               >
                 {feature.badge}
-              </span>
+              </span> */}
             </motion.article>
           ))}
         </motion.div>
@@ -338,19 +422,19 @@ export function CoreAiModuleSection({
                   animate={
                     isAuthenticated && showPixelReveal
                       ? {
-                          opacity: 0,
-                          scale: 0.15,
-                          y: -6,
-                          x: 6,
-                          rotate: block.rotate,
-                        }
+                        opacity: 0,
+                        scale: 0.15,
+                        y: -6,
+                        x: 6,
+                        rotate: block.rotate,
+                      }
                       : {
-                          opacity: 0.42,
-                          scale: 1,
-                          y: 0,
-                          x: 0,
-                          rotate: 0,
-                        }
+                        opacity: 0.42,
+                        scale: 1,
+                        y: 0,
+                        x: 0,
+                        rotate: 0,
+                      }
                   }
                   transition={{
                     delay: block.delay,
@@ -395,7 +479,7 @@ export function CoreAiModuleSection({
       <AnimatePresence>
         {isAnalyticsModalOpen ? (
           <div
-            className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/75 p-1.5 backdrop-blur-sm sm:p-3 md:p-4"
+            className="fixed inset-0 z-50 grid place-items-center overflow-hidden bg-black/80 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             aria-label="Analytics AI details modal"
@@ -406,20 +490,16 @@ export function CoreAiModuleSection({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.97 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="my-2 flex max-h-[90vh] w-full max-w-[94vw] flex-col overflow-hidden rounded-xl border border-[#32374366] bg-[#07090d] shadow-[0_25px_50px_rgba(0,0,0,0.35)] sm:my-4 sm:max-h-[92vh] sm:max-w-[92vw] sm:rounded-2xl lg:max-w-[1100px]"
+              className="flex h-screen w-screen max-h-screen max-w-none flex-col overflow-hidden border border-[#32374366] bg-[#07090d] shadow-[0_25px_50px_rgba(0,0,0,0.35)] lg:h-svh"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="border-b border-[#32374366] px-3 py-3 sm:px-6 sm:py-5 lg:px-7 lg:py-6">
+              <div className="border-b border-[#32374366] px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                     <BarChart3 className="size-4 text-[#7c4dff] sm:size-5" />
                     <h3 className="text-base font-bold tracking-[-0.02em] text-[#f3f4f6] sm:text-[28px] lg:text-[32px]">
                       Analytics AI
                     </h3>
-                    <span className="text-sm text-[#bdc1ca] sm:text-xl lg:text-[24px]">—</span>
-                    <p className="truncate text-xs text-[#bdc1ca] sm:text-base lg:text-[18px]">
-                      Insights &amp; Dashboards
-                    </p>
                   </div>
                   <button
                     type="button"
@@ -432,10 +512,10 @@ export function CoreAiModuleSection({
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#32374366] bg-black/40 px-3 py-3 sm:px-6 sm:py-6 lg:px-7 lg:py-7 [scrollbar-width:thin] [scrollbar-color:rgba(124,77,255,0.6)_rgba(255,255,255,0.06)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#7c4dff]/70 [&::-webkit-scrollbar-thumb:hover]:bg-[#8f65ff]/80">
-                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
-                  <div>
-                    <div className="overflow-hidden rounded-[18px] border border-[#32374399] bg-[#171a1f] shadow-[0_1px_2px_rgba(23,26,31,0.08)]">
+              <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#32374366] bg-black/40 px-3 py-3 sm:px-5 sm:py-5 lg:px-6 lg:py-6 [scrollbar-width:thin] [scrollbar-color:rgba(124,77,255,0.6)_rgba(255,255,255,0.06)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#7c4dff]/70 [&::-webkit-scrollbar-thumb:hover]:bg-[#8f65ff]/80">
+                <div className="grid gap-3 sm:gap-4 md:gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,400px)] lg:gap-5">
+                  <div className="w-full">
+                    <div className="h-[220px] overflow-hidden rounded-[18px] border border-[#32374399] bg-[#171a1f] shadow-[0_1px_2px_rgba(23,26,31,0.08)] sm:h-[300px] md:h-[360px] lg:h-[400px] xl:h-[440px]">
                       <AnimatePresence mode="wait">
                         <motion.img
                           key={currentSlide.id}
@@ -445,7 +525,7 @@ export function CoreAiModuleSection({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0.35, scale: 0.99 }}
                           transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="h-auto max-h-[220px] w-full object-cover sm:max-h-[290px] md:max-h-[360px] lg:max-h-none"
+                          className="h-full w-full object-contain"
                         />
                       </AnimatePresence>
                     </div>
@@ -489,7 +569,7 @@ export function CoreAiModuleSection({
                         exit={{ opacity: 0.25, y: -6 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
                       >
-                        <h4 className="text-lg font-medium leading-[1.1] text-[#f3f4f6] sm:text-[26px] lg:text-[30px]">
+                        <h4 className="text-lg font-medium leading-[1.1] text-[#f3f4f6] sm:text-[26px] lg:text-[34px]">
                           {currentSlide.rightTitle}
                         </h4>
                         <p className="mt-2 text-sm leading-relaxed text-[#bdc1ca] sm:mt-3 sm:text-base lg:text-[16px]">
@@ -501,28 +581,28 @@ export function CoreAiModuleSection({
                               key={`${currentSlide.id}-${stat.label}`}
                               className="rounded-xl border border-[#32374380] bg-[#171a1f] px-3 py-2.5 sm:rounded-2xl sm:px-5 sm:py-4"
                             >
-                              <div className="flex items-center gap-2.5 sm:gap-4">
-                                {stat.icon === "trend" ? (
-                                  <TrendingUp className="size-4 text-[#f3f4f6] sm:size-5" />
-                                ) : null}
-                                {stat.icon === "activity" ? (
-                                  <span className="grid size-8 place-items-center rounded-full bg-[#6941c61a] sm:size-10">
-                                    <Activity className="size-4 text-[#6941c6] sm:size-5" />
-                                  </span>
-                                ) : null}
-                                {stat.icon === "clock" ? (
-                                  <span className="grid size-8 place-items-center rounded-full bg-[#32d5831a] sm:size-10">
-                                    <Clock3 className="size-4 text-[#32d583] sm:size-5" />
-                                  </span>
-                                ) : null}
-                                <div>
-                                  <p className="text-sm text-[#bdc1ca] sm:text-base lg:text-[14px]">
+                              <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+                                <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
+                                  {stat.icon === "trend" ? (
+                                    <TrendingUp className="size-4 text-[#f3f4f6] sm:size-5" />
+                                  ) : null}
+                                  {stat.icon === "activity" ? (
+                                    <span className="grid size-8 place-items-center rounded-full bg-[#6941c61a] sm:size-10">
+                                      <Activity className="size-4 text-[#6941c6] sm:size-5" />
+                                    </span>
+                                  ) : null}
+                                  {stat.icon === "clock" ? (
+                                    <span className="grid size-8 place-items-center rounded-full bg-[#32d5831a] sm:size-10">
+                                      <Clock3 className="size-4 text-[#32d583] sm:size-5" />
+                                    </span>
+                                  ) : null}
+                                  <p className="truncate text-sm text-[#bdc1ca] sm:text-base lg:text-[18px]">
                                     {stat.label}
                                   </p>
-                                  <p className="text-[24px] font-bold leading-none text-[#f3f4f6] sm:text-[30px] lg:text-[44px]">
-                                    {stat.value}
-                                  </p>
                                 </div>
+                                <p className="shrink-0 text-[22px] font-bold leading-none text-[#f3f4f6] sm:text-[28px] lg:text-[28px]">
+                                  {stat.value}
+                                </p>
                               </div>
                             </div>
                           ))}
@@ -536,16 +616,13 @@ export function CoreAiModuleSection({
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 bg-[#171a1f80] px-3 py-3 sm:gap-3 sm:px-6 sm:py-5 lg:px-7 lg:py-6">
+              <div className="flex items-center justify-end bg-[#171a1f80] px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4">
                 <Button
                   variant="ghost"
                   className="h-8 px-3 text-xs text-[#bdc1ca] hover:bg-white/5 hover:text-[#f3f4f6] sm:h-10 sm:px-4 sm:text-sm"
                   onClick={() => setIsAnalyticsModalOpen(false)}
                 >
                   Close
-                </Button>
-                <Button className="h-8 bg-[#6941c6] px-3 text-xs text-white hover:bg-[#5c36bc] sm:h-10 sm:px-4 sm:text-sm">
-                  Request Demo
                 </Button>
               </div>
             </motion.div>

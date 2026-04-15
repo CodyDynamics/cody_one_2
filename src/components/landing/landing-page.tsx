@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import {
   Activity,
   Building2,
   CheckCircle2,
+  ChevronDown,
   HeartPulse,
   Network,
   ShieldCheck,
@@ -51,6 +52,8 @@ export function LandingPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   async function refreshAuthState() {
     try {
@@ -121,15 +124,112 @@ export function LandingPage() {
     }
   }
 
+  async function handleSignOut() {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+    setAuthPhase("guest");
+    setUserEmail(null);
+    setIsUserMenuOpen(false);
+  }
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!userMenuRef.current) return;
+      const target = event.target as Node;
+      if (!userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (authPhase === "authed") {
+    const displayName = userEmail?.split("@")[0] ?? "User";
+    return (
+      <main className="min-h-screen bg-[#050507] text-[#f3f4f6]">
+        <div className="mx-auto flex w-full max-w-[1248px] items-center justify-end px-4 pt-6 md:px-8">
+          <div className="relative" ref={userMenuRef}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-[#323743] cursor-pointer bg-black text-xs text-[#f3f4f6] hover:bg-black/80 hover:text-[#f3f4f6]"
+              onClick={() => setIsUserMenuOpen((prev) => !prev)}
+            >
+              <span>{`Hi, ${displayName}`}</span>
+              <ChevronDown
+                className={`ml-2 size-4 transition-transform ${
+                  isUserMenuOpen ? "rotate-180" : ""
+                }`}
+              />
+            </Button>
+
+            {isUserMenuOpen ? (
+              <div className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-xl border border-[#323743] bg-[#11131a] shadow-2xl">
+                <div className="border-b border-[#32374366] px-3 py-2 text-xs font-medium uppercase tracking-wide text-[#94a3b8]">
+                  Pages
+                </div>
+                <Link
+                  href="/"
+                  className="block px-3 py-2 text-sm text-[#e2e8f0] transition-colors hover:bg-white/5"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/login"
+                  className="block px-3 py-2 text-sm text-[#e2e8f0] transition-colors hover:bg-white/5"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="block px-3 py-2 text-sm text-[#e2e8f0] transition-colors hover:bg-white/5"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  Register
+                </Link>
+                <button
+                  type="button"
+                  className="block w-full border-t border-[#32374366] px-3 py-2 text-left text-sm text-[#fca5a5] transition-colors hover:bg-red-500/10"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <CoreAiModuleSection
+          isAuthenticated
+          isCheckingAuth={false}
+          onRequestLogin={() => setIsLoginModalOpen(true)}
+        />
+      </main>
+    );
+  }
+
+  if (authPhase === "loading") {
+    return (
+      <main className="min-h-screen bg-black">
+        <div className="fixed inset-0 z-50 bg-black" aria-hidden />
+      </main>
+    );
+  }
+
   return (
     <main className="bg-[#050507] text-[#f3f4f6]">
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/80 backdrop-blur-md">
         <div className="mx-auto flex h-[72px] w-full max-w-[1248px] items-center justify-between px-4 md:px-8">
-          <a href="#" className="flex items-center gap-2" aria-label="Cody One home">
+          <a href="#" className="flex items-center gap-2" aria-label="Cody Dynamics home">
             <span className="grid size-9 place-items-center rounded-md bg-[#6941c6]">
               <Activity className="size-4" />
             </span>
-            <span className="text-[23px] leading-[23px] font-bold text-[#6941c6]">Cody One</span>
+            <span className="text-[23px] leading-[23px] font-bold text-[#6941c6]">Cody Dynamics</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-[#bdc1ca] lg:flex" aria-label="Main navigation">
             {navItems.map((item) => (
@@ -139,64 +239,35 @@ export function LandingPage() {
             ))}
           </nav>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            {authPhase === "authed" && userEmail ? (
-              <>
-                <span
-                  className="hidden max-w-[200px] truncate text-sm text-[#bdc1ca] sm:inline"
-                  title={userEmail}
-                >
-                  {userEmail}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="border-[#323743] bg-black text-xs text-[#f3f4f6] hover:bg-black/80"
-                  onClick={async () => {
-                    await fetch("/api/auth/logout", {
-                      method: "POST",
-                      credentials: "same-origin",
-                    });
-                    setAuthPhase("guest");
-                    setUserEmail(null);
-                  }}
-                >
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setIsLoginModalOpen(true);
-                  }}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]",
-                  )}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className={cn(
-                    buttonVariants({ size: "sm" }),
-                    "cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]",
-                  )}
-                >
-                  Register
-                </Link>
-              </>
-            )}
-            <Button
+            <Link
+              href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                setIsLoginModalOpen(true);
+              }}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9]",
+              )}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/register"
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]",
+              )}
+            >
+              Register
+            </Link>
+            {/* <Button
               variant="ghost"
               size="sm"
               className="hidden cursor-pointer text-[#6941c6] hover:bg-transparent hover:text-[#7d56d9] md:inline-flex"
             >
               Request demo
-            </Button>
+            </Button> */}
             <Button
               size="sm"
               className="cursor-pointer bg-[#6941c6] hover:bg-[#5c36bc]"
@@ -219,7 +290,7 @@ export function LandingPage() {
             Platform 2.0 Now Available
           </div>
           <h1 className="text-pretty text-5xl font-bold leading-[1.02] tracking-[-0.02em] lg:text-[72px] lg:leading-[72px] lg:tracking-[-1.8px]">
-            <span className="text-[#6941c6]">Cody One</span>
+            <span className="text-[#6941c6]">Cody Dynamics</span>
             <br />
             AI-powered Revenue Cycle Automation
           </h1>
@@ -242,13 +313,13 @@ export function LandingPage() {
             <Button size="lg" className="h-14 rounded-[16px] bg-[#6941c6] px-7 text-[18px] font-medium hover:bg-[#5c36bc]">
               Get Started
             </Button>
-            <Button
+            {/* <Button
               size="lg"
               variant="outline"
               className="h-14 cursor-pointer rounded-[16px] border-[#32374399] bg-transparent px-7 text-[18px] font-medium text-[#f3f4f6] hover:border-[#4a5161] hover:bg-white/5 hover:text-[#f3f4f6]"
             >
               Request Demo
-            </Button>
+            </Button> */}
           </div>
         </motion.div>
 
@@ -327,19 +398,13 @@ export function LandingPage() {
         </div>
       </section>
 
-      <CoreAiModuleSection
-        isAuthenticated={authPhase === "authed"}
-        isCheckingAuth={authPhase === "loading"}
-        onRequestLogin={() => setIsLoginModalOpen(true)}
-      />
-
       <section className="border-y border-[#32374380] bg-[#1f113b33]">
         <div className="mx-auto flex w-full max-w-[1248px] flex-col gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
             <h2 className="text-4xl font-bold">Ready to transform your revenue cycle?</h2>
             <p className="mt-3 text-[#bdc1ca]">
               Join industry leaders who are maximizing revenue and minimizing
-              administrative burden with Cody One.
+              administrative burden with Cody Dynamics.
             </p>
           </div>
           <Button className="h-14 rounded-2xl bg-[#f3f4f6] px-8 text-black hover:bg-white">
@@ -348,7 +413,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-[#f8fafc] text-[#bdc1ca]">
+      <footer className="bg-[#0a0d14] text-[#a7adba]">
         <div className="mx-auto w-full max-w-[1248px] px-4 py-14 md:px-8">
           <div className="grid gap-10 md:grid-cols-[1.2fr_3fr]">
             <div>
@@ -356,9 +421,9 @@ export function LandingPage() {
                 <span className="grid size-7 place-items-center rounded bg-[#6941c6] text-white">
                   <Activity className="size-3.5" />
                 </span>
-                <span className="font-bold text-[#6941c6]">Cody One</span>
+                <span className="font-bold text-[#6941c6]">Cody Dynamics</span>
               </div>
-              <p className="mt-4 max-w-[300px] text-sm">
+              <p className="mt-4 max-w-[300px] text-sm text-[#8c95a7]">
                 AI-powered Revenue Cycle Automation Platform designed for enterprise
                 healthcare.
               </p>
@@ -382,7 +447,7 @@ export function LandingPage() {
                 <ul key={idx} className="space-y-3">
                   {group.map((item) => (
                     <li key={item}>
-                      <a href="#" className="hover:text-[#151923]">
+                      <a href="#" className="transition-colors hover:text-[#e5e7eb]">
                         {item}
                       </a>
                     </li>
@@ -391,8 +456,8 @@ export function LandingPage() {
               ))}
             </div>
           </div>
-          <div className="mt-10 border-t border-[#1519234d] pt-5 text-sm">
-            © 2026 Cody One. All rights reserved.
+          <div className="mt-10 border-t border-[#32374366] pt-5 text-sm text-[#8c95a7]">
+            © 2026 Cody Dynamics. All rights reserved.
           </div>
         </div>
       </footer>
