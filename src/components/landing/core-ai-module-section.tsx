@@ -490,7 +490,7 @@ export function CoreAiModuleSection({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.97 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="flex h-screen w-screen max-h-screen max-w-none flex-col overflow-hidden border border-[#32374366] bg-[#07090d] shadow-[0_25px_50px_rgba(0,0,0,0.35)] lg:h-svh"
+              className="flex h-screen w-screen max-w-none flex-col overflow-hidden border border-[#32374366] bg-[#07090d] shadow-[0_25px_50px_rgba(0,0,0,0.35)] lg:h-svh"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="border-b border-[#32374366] px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4">
